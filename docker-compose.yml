@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: boutique
+      POSTGRES_PASSWORD: boutique
+      POSTGRES_DB: boutique
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+
+  back:
+    build: ./back
+    environment:
+      DATABASE_URL: postgres://boutique:boutique@db:5432/boutique
+      JWT_SECRET: secret-de-dev
+      PORT: 3000
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+
+  front:
+    image: nginx:alpine
+    volumes:
+      - ./front:/usr/share/nginx/html:ro
+      - ./front/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - back
+    ports:
+      - "8080:80"
